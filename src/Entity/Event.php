@@ -2,16 +2,42 @@
 
 namespace App\Entity;
 
-use App\Repository\EventRepository;
+use ApiPlatform\Core\Annotation\ApiResource;
+use App\Controller\EventParticipant;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Symfony\Component\Serializer\Annotation\Groups;
 use Doctrine\ORM\Mapping as ORM;
-use ApiPlatform\Core\Annotation\ApiResource;
 
 /**
- * @ORM\Entity(repositoryClass=EventRepository::class)
+ * @ORM\Entity(repositoryClass=App\Repository\EventRepository::class)
  */
-#[ApiResource()]
+#[ApiResource(
+    collectionOperations: [
+        'get' => [
+            'normalization_context' => ['groups' => ['getAll:Event']],
+        ],
+        'post' => [
+            'normalization_context' => ['groups' => ['post:return:Event']],
+            'denormalization_context' => ['groups' => ['post:Event']]
+        ]
+    ],
+    itemOperations: [
+        'get' => [
+            'normalization_context' => ['groups' => ['getOne:Event']],
+        ],
+        'put' => [
+            'normalization_context' => ['groups' => ['put:return:Event']],
+            'denormalization_context' => ['groups' => ['put:Event']]
+        ],
+        'delete',
+        'add_participant' => [
+            'method' => 'PUT',
+            'path' => '/events/{id}/participant',
+            'controller' => EventParticipant::class
+        ]
+    ]
+)]
 class Event
 {
     /**
@@ -19,57 +45,37 @@ class Event
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
      */
+    #[Groups(['getAll:Event', 'post:return:Event', 'getOne:Event', 'put:return:Event', 'putP:return:Event'])]
     private $id;
 
     /**
      * @ORM\Column(type="string", length=255)
      */
-    private $title;
+    #[Groups(['getAll:Event', 'post:return:Event', 'getOne:Event', 'put:return:Event', 'post:Event', 'put:Event', 'putP:return:Event'])]
+    private $name;
 
     /**
-     * @ORM\Column(type="text")
-     */
-    private $description;
-
-    /**
-     * @ORM\Column(type="datetime")
-     */
-    private $starting_date;
-
-    /**
-     * @ORM\Column(type="datetime", nullable=true)
-     */
-    private $ending_date;
-
-    /**
-     * @ORM\Column(type="string", length=255, nullable=true)
-     */
-    private $location;
-
-    /**
-     * @ORM\Column(type="string", length=255, nullable=true)
-     */
-    private $maps_link;
-
-    /**
-     * @ORM\ManyToMany(targetEntity=CategoryEvent::class, inversedBy="events")
-     */
-    private $categories_event;
-
-    /**
-     * @ORM\ManyToOne(targetEntity=User::class, inversedBy="createdEvents")
+     * @ORM\ManyToOne(targetEntity=User::class, inversedBy="eventsCreated")
      * @ORM\JoinColumn(nullable=false)
      */
+    #[Groups(['getAll:Event', 'post:return:Event', 'getOne:Event', 'put:return:Event', 'post:Event', 'put:Event', 'putP:return:Event'])]
     private $creator;
 
     /**
-     * @ORM\ManyToMany(targetEntity=User::class, inversedBy="registeredEvents")
+     * @ORM\ManyToMany(targetEntity=EventCategory::class, inversedBy="events")
      */
+    #[Groups(['getAll:Event', 'post:return:Event', 'getOne:Event', 'put:return:Event', 'post:Event', 'put:Event', 'putP:return:Event'])]
+    private $categories;
+
+    /**
+     * @ORM\ManyToMany(targetEntity=User::class, inversedBy="eventsParticipated")
+     */
+    #[Groups(['getAll:Event', 'post:return:Event', 'getOne:Event', 'put:return:Event', 'post:Event', 'put:Event'])]
     private $participants;
 
     public function __construct()
     {
-        $this->categories_event = new ArrayCollection();
+        $this->categories = new ArrayCollection();
         $this->participants = new ArrayCollection();
     }
 
@@ -78,98 +84,14 @@ class Event
         return $this->id;
     }
 
-    public function getTitle(): ?string
+    public function getName(): ?string
     {
-        return $this->title;
+        return $this->name;
     }
 
-    public function setTitle(string $title): self
+    public function setName(string $name): self
     {
-        $this->title = $title;
-
-        return $this;
-    }
-
-    public function getDescription(): ?string
-    {
-        return $this->description;
-    }
-
-    public function setDescription(string $description): self
-    {
-        $this->description = $description;
-
-        return $this;
-    }
-
-    public function getStartingDate(): ?\DateTimeInterface
-    {
-        return $this->starting_date;
-    }
-
-    public function setStartingDate(\DateTimeInterface $starting_date): self
-    {
-        $this->starting_date = $starting_date;
-
-        return $this;
-    }
-
-    public function getEndingDate(): ?\DateTimeInterface
-    {
-        return $this->ending_date;
-    }
-
-    public function setEndingDate(\DateTimeInterface $ending_date): self
-    {
-        $this->ending_date = $ending_date;
-
-        return $this;
-    }
-
-    public function getLocation(): ?string
-    {
-        return $this->location;
-    }
-
-    public function setLocation(?string $location): self
-    {
-        $this->location = $location;
-
-        return $this;
-    }
-
-    public function getMapsLink(): ?string
-    {
-        return $this->maps_link;
-    }
-
-    public function setMapsLink(?string $maps_link): self
-    {
-        $this->maps_link = $maps_link;
-
-        return $this;
-    }
-
-    /**
-     * @return Collection|CategoryEvent[]
-     */
-    public function getCategoriesEvent(): Collection
-    {
-        return $this->categories_event;
-    }
-
-    public function addCategoriesEvent(CategoryEvent $categoriesEvent): self
-    {
-        if (!$this->categories_event->contains($categoriesEvent)) {
-            $this->categories_event[] = $categoriesEvent;
-        }
-
-        return $this;
-    }
-
-    public function removeCategoriesEvent(CategoryEvent $categoriesEvent): self
-    {
-        $this->categories_event->removeElement($categoriesEvent);
+        $this->name = $name;
 
         return $this;
     }
@@ -182,6 +104,30 @@ class Event
     public function setCreator(?User $creator): self
     {
         $this->creator = $creator;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|EventCategory[]
+     */
+    public function getCategories(): Collection
+    {
+        return $this->categories;
+    }
+
+    public function addCategory(EventCategory $category): self
+    {
+        if (!$this->categories->contains($category)) {
+            $this->categories[] = $category;
+        }
+
+        return $this;
+    }
+
+    public function removeCategory(EventCategory $category): self
+    {
+        $this->categories->removeElement($category);
 
         return $this;
     }

@@ -3,15 +3,35 @@
 namespace App\Entity;
 
 use ApiPlatform\Core\Annotation\ApiResource;
-use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Symfony\Component\Serializer\Annotation\Groups;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @ORM\Entity(repositoryClass=UserRepository::class)
+ * @ORM\Entity(repositoryClass=App\Repository\UserRepository::class)
  */
-#[ApiResource()]
+#[ApiResource(
+    collectionOperations: [
+        'get' => [
+            'normalization_context' => ['groups' => ['getAll:User']],
+        ],
+        'post' => [
+            'normalization_context' => ['groups' => ['post:return:User']],
+            'denormalization_context' => ['groups' => ['post:User']]
+        ],
+    ],
+    itemOperations: [
+        'get' => [
+            'normalization_context' => ['groups' => ['getOne:User']],
+        ],
+        'put' => [
+            'normalization_context' => ['groups' => ['put:return:User']],
+            'denormalization_context' => ['groups' => ['put:User']]
+        ],
+        'delete'
+    ]
+)]
 class User
 {
     /**
@@ -19,100 +39,35 @@ class User
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
      */
+    #[Groups(['getAll:User', 'post:return:User', 'getOne:User', 'put:return:User'])]
     private $id;
-
-    /**
-     * @ORM\Column(type="string", length=255)
-     */
-    private $lastname;
-
-    /**
-     * @ORM\Column(type="string", length=255)
-     */
-    private $firstname;
-
-    /**
-     * @ORM\Column(type="string", length=255)
-     */
-    private $email;
-
-    /**
-     * @ORM\Column(type="string", length=255)
-     */
-    private $password;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
      */
+    #[Groups(['getAll:User', 'post:return:User', 'getOne:User', 'put:return:User', 'post:User', 'put:User'])]
     private $nickname;
 
     /**
      * @ORM\OneToMany(targetEntity=Event::class, mappedBy="creator")
      */
-    private $createdEvents;
+    #[Groups(['getAll:User', 'getOne:User', 'put:return:User'])]
+    private $eventsCreated;
 
     /**
      * @ORM\ManyToMany(targetEntity=Event::class, mappedBy="participants")
      */
-    private $registeredEvents;
+    private $eventsParticipated;
 
     public function __construct()
     {
-        $this->createdEvents = new ArrayCollection();
-        $this->registeredEvents = new ArrayCollection();
+        $this->eventsCreated = new ArrayCollection();
+        $this->eventsParticipated = new ArrayCollection();
     }
 
     public function getId(): ?int
     {
         return $this->id;
-    }
-
-    public function getLastname(): ?string
-    {
-        return $this->lastname;
-    }
-
-    public function setLastname(string $lastname): self
-    {
-        $this->lastname = $lastname;
-
-        return $this;
-    }
-
-    public function getFirstname(): ?string
-    {
-        return $this->firstname;
-    }
-
-    public function setFirstname(string $firstname): self
-    {
-        $this->firstname = $firstname;
-
-        return $this;
-    }
-
-    public function getEmail(): ?string
-    {
-        return $this->email;
-    }
-
-    public function setEmail(string $email): self
-    {
-        $this->email = $email;
-
-        return $this;
-    }
-
-    public function getPassword(): ?string
-    {
-        return $this->password;
-    }
-
-    public function setPassword(string $password): self
-    {
-        $this->password = $password;
-
-        return $this;
     }
 
     public function getNickname(): ?string
@@ -130,27 +85,27 @@ class User
     /**
      * @return Collection|Event[]
      */
-    public function getCreatedEvents(): Collection
+    public function getEventsCreated(): Collection
     {
-        return $this->createdEvents;
+        return $this->eventsCreated;
     }
 
-    public function addCreatedEvent(Event $createdEvent): self
+    public function addEventsCreated(Event $eventsCreated): self
     {
-        if (!$this->createdEvents->contains($createdEvent)) {
-            $this->createdEvents[] = $createdEvent;
-            $createdEvent->setCreator($this);
+        if (!$this->eventsCreated->contains($eventsCreated)) {
+            $this->eventsCreated[] = $eventsCreated;
+            $eventsCreated->setCreator($this);
         }
 
         return $this;
     }
 
-    public function removeCreatedEvent(Event $createdEvent): self
+    public function removeEventsCreated(Event $eventsCreated): self
     {
-        if ($this->createdEvents->removeElement($createdEvent)) {
+        if ($this->eventsCreated->removeElement($eventsCreated)) {
             // set the owning side to null (unless already changed)
-            if ($createdEvent->getCreator() === $this) {
-                $createdEvent->setCreator(null);
+            if ($eventsCreated->getCreator() === $this) {
+                $eventsCreated->setCreator(null);
             }
         }
 
@@ -160,25 +115,25 @@ class User
     /**
      * @return Collection|Event[]
      */
-    public function getRegisteredEvents(): Collection
+    public function getEventsParticipated(): Collection
     {
-        return $this->registeredEvents;
+        return $this->eventsParticipated;
     }
 
-    public function addRegisteredEvent(Event $registeredEvent): self
+    public function addEventsParticipated(Event $eventsParticipated): self
     {
-        if (!$this->registeredEvents->contains($registeredEvent)) {
-            $this->registeredEvents[] = $registeredEvent;
-            $registeredEvent->addParticipant($this);
+        if (!$this->eventsParticipated->contains($eventsParticipated)) {
+            $this->eventsParticipated[] = $eventsParticipated;
+            $eventsParticipated->addParticipant($this);
         }
 
         return $this;
     }
 
-    public function removeRegisteredEvent(Event $registeredEvent): self
+    public function removeEventsParticipated(Event $eventsParticipated): self
     {
-        if ($this->registeredEvents->removeElement($registeredEvent)) {
-            $registeredEvent->removeParticipant($this);
+        if ($this->eventsParticipated->removeElement($eventsParticipated)) {
+            $eventsParticipated->removeParticipant($this);
         }
 
         return $this;
