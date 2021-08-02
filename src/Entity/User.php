@@ -7,11 +7,26 @@ use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 /**
  * @ORM\Entity(repositoryClass=UserRepository::class)
  */
-#[ApiResource()]
+#[ApiResource(
+    collectionOperations: [
+        'get',
+        'post',
+    ],
+    itemOperations: [
+        'put',
+        'get'
+    ],
+    denormalizationContext: [
+        'groups' => [
+            'write:User'
+        ]
+    ]
+)]
 class User
 {
     /**
@@ -24,37 +39,42 @@ class User
     /**
      * @ORM\Column(type="string", length=255)
      */
-    private $lastname;
+    #[Groups(['write:User'])]
+    private ?string $lastname;
 
     /**
      * @ORM\Column(type="string", length=255)
      */
-    private $firstname;
+    #[Groups(['write:User'])]
+    private ?string $firstname;
 
     /**
      * @ORM\Column(type="string", length=255)
      */
-    private $email;
+    #[Groups(['write:User'])]
+    private ?string $email;
 
     /**
      * @ORM\Column(type="string", length=255)
      */
-    private $password;
+    #[Groups(['write:User'])]
+    private ?string $password;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private $nickname;
+    #[Groups(['write:User'])]
+    private ?string $nickname;
 
     /**
      * @ORM\OneToMany(targetEntity=Event::class, mappedBy="creator")
      */
-    private $createdEvents;
+    private ArrayCollection $createdEvents;
 
     /**
      * @ORM\ManyToMany(targetEntity=Event::class, mappedBy="participants")
      */
-    private $registeredEvents;
+    private ArrayCollection $registeredEvents;
 
     public function __construct()
     {

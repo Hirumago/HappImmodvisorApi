@@ -2,16 +2,37 @@
 
 namespace App\Entity;
 
+use App\Controller\AddParticipantsToEvent;
 use App\Repository\EventRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use ApiPlatform\Core\Annotation\ApiResource;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 /**
  * @ORM\Entity(repositoryClass=EventRepository::class)
  */
-#[ApiResource()]
+#[ApiResource(
+    collectionOperations: [
+        'get',
+        'post'
+    ],
+    itemOperations: [
+        'put',
+        'delete',
+        'participants' => [
+            'method' => 'POST',
+            'path' => '/events/{id}/participants',
+            'controller' => AddParticipantsToEvent::class
+        ]
+    ],
+    denormalizationContext: [
+        'groups' => [
+            'write:Event'
+        ]
+    ]
+)]
 class Event
 {
     /**
@@ -24,43 +45,51 @@ class Event
     /**
      * @ORM\Column(type="string", length=255)
      */
-    private $title;
+    #[Groups(['write:Event'])]
+    private ?string $title;
 
     /**
      * @ORM\Column(type="text")
      */
-    private $description;
+    #[Groups(['write:Event'])]
+    private ?string $description;
 
     /**
      * @ORM\Column(type="datetime")
      */
-    private $starting_date;
+    #[Groups(['write:Event'])]
+    private ?\DateTimeInterface $startingDate;
 
     /**
      * @ORM\Column(type="datetime", nullable=true)
      */
-    private $ending_date;
+    #[Groups(['write:Event'])]
+    private ?\DateTimeInterface $endingDate;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private $location;
+    #[Groups(['write:Event'])]
+    private ?string $location;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private $maps_link;
+    #[Groups(['write:Event'])]
+    private ?string $mapsLink;
 
     /**
      * @ORM\ManyToMany(targetEntity=CategoryEvent::class, inversedBy="events")
      */
-    private $categories_event;
+    #[Groups(['write:Event'])]
+    private ArrayCollection $categoriesEvent;
 
     /**
      * @ORM\ManyToOne(targetEntity=User::class, inversedBy="createdEvents")
      * @ORM\JoinColumn(nullable=false)
      */
-    private $creator;
+    #[Groups(['write:Event'])]
+    private ?User $creator;
 
     /**
      * @ORM\ManyToMany(targetEntity=User::class, inversedBy="registeredEvents")
@@ -69,7 +98,7 @@ class Event
 
     public function __construct()
     {
-        $this->categories_event = new ArrayCollection();
+        $this->categoriesEvent = new ArrayCollection();
         $this->participants = new ArrayCollection();
     }
 
@@ -104,24 +133,24 @@ class Event
 
     public function getStartingDate(): ?\DateTimeInterface
     {
-        return $this->starting_date;
+        return $this->startingDate;
     }
 
-    public function setStartingDate(\DateTimeInterface $starting_date): self
+    public function setStartingDate(\DateTimeInterface $startingDate): self
     {
-        $this->starting_date = $starting_date;
+        $this->startingDate = $startingDate;
 
         return $this;
     }
 
     public function getEndingDate(): ?\DateTimeInterface
     {
-        return $this->ending_date;
+        return $this->endingDate;
     }
 
-    public function setEndingDate(\DateTimeInterface $ending_date): self
+    public function setEndingDate(\DateTimeInterface $endingDate): self
     {
-        $this->ending_date = $ending_date;
+        $this->endingDate = $endingDate;
 
         return $this;
     }
@@ -140,12 +169,12 @@ class Event
 
     public function getMapsLink(): ?string
     {
-        return $this->maps_link;
+        return $this->mapsLink;
     }
 
-    public function setMapsLink(?string $maps_link): self
+    public function setMapsLink(?string $mapsLink): self
     {
-        $this->maps_link = $maps_link;
+        $this->mapsLink = $mapsLink;
 
         return $this;
     }
@@ -155,13 +184,13 @@ class Event
      */
     public function getCategoriesEvent(): Collection
     {
-        return $this->categories_event;
+        return $this->categoriesEvent;
     }
 
     public function addCategoriesEvent(CategoryEvent $categoriesEvent): self
     {
-        if (!$this->categories_event->contains($categoriesEvent)) {
-            $this->categories_event[] = $categoriesEvent;
+        if (!$this->categoriesEvent->contains($categoriesEvent)) {
+            $this->categoriesEvent[] = $categoriesEvent;
         }
 
         return $this;
@@ -169,7 +198,7 @@ class Event
 
     public function removeCategoriesEvent(CategoryEvent $categoriesEvent): self
     {
-        $this->categories_event->removeElement($categoriesEvent);
+        $this->categoriesEvent->removeElement($categoriesEvent);
 
         return $this;
     }

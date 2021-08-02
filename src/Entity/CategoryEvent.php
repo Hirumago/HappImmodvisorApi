@@ -2,14 +2,31 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Core\Annotation\ApiResource;
 use App\Repository\CategoryEventRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 /**
  * @ORM\Entity(repositoryClass=CategoryEventRepository::class)
  */
+#[ApiResource(
+    collectionOperations: [
+        'get',
+        'post',
+    ],
+    itemOperations: [
+        'get',
+        'put'
+    ],
+    denormalizationContext: [
+        'groups' => [
+            'write:CategoryEvent'
+        ]
+    ]
+)]
 class CategoryEvent
 {
     /**
@@ -20,19 +37,21 @@ class CategoryEvent
     private $id;
 
     /**
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(type="string", length=255, unique=true)
      */
-    private $name;
+    #[Groups(['write:CategoryEvent'])]
+    private ?string $name;
 
     /**
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private $link_image;
+    #[Groups(['write:CategoryEvent'])]
+    private ?string $linkImage;
 
     /**
-     * @ORM\ManyToMany(targetEntity=Event::class, mappedBy="categories_event")
+     * @ORM\ManyToMany(targetEntity=Event::class, mappedBy="categoriesEvent")
      */
-    private $events;
+    private Collection $events;
 
     public function __construct()
     {
@@ -58,12 +77,12 @@ class CategoryEvent
 
     public function getLinkImage(): ?string
     {
-        return $this->link_image;
+        return $this->linkImage;
     }
 
-    public function setLinkImage(string $link_image): self
+    public function setLinkImage(string $linkImage): self
     {
-        $this->link_image = $link_image;
+        $this->linkImage = $linkImage;
 
         return $this;
     }
