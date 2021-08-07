@@ -4,6 +4,8 @@ namespace App\Entity;
 
 use ApiPlatform\Core\Annotation\ApiResource;
 use App\Controller\EventParticipant;
+use App\Controller\EventAddParticipant;
+use App\Controller\EventRemoveParticipant;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Symfony\Component\Serializer\Annotation\Groups;
@@ -20,7 +22,7 @@ use Doctrine\ORM\Mapping as ORM;
         'post' => [
             'normalization_context' => ['groups' => ['post:return:Event']],
             'denormalization_context' => ['groups' => ['post:Event']]
-        ]
+        ],
     ],
     itemOperations: [
         'get' => [
@@ -33,8 +35,15 @@ use Doctrine\ORM\Mapping as ORM;
         'delete',
         'add_participant' => [
             'method' => 'PUT',
-            'path' => '/events/{id}/participant',
-            'controller' => EventParticipant::class
+            'path' => '/events/{eventId}/participant/{userId}',
+            'controller' => EventAddParticipant::class,
+            'read' => false
+        ],
+        'remove_participant' => [
+            'method' => 'DELETE',
+            'path' => '/events/{eventId}/participant/{userId}',
+            'controller' => EventRemoveParticipant::class,
+            'read' => false
         ]
     ]
 )]
@@ -51,26 +60,59 @@ class Event
     /**
      * @ORM\Column(type="string", length=255)
      */
-    #[Groups(['getAll:Event', 'post:return:Event', 'getOne:Event', 'put:return:Event', 'post:Event', 'put:Event', 'putP:return:Event'])]
+    #[Groups([
+        'getAll:Event',
+        'post:return:Event',
+        'getOne:Event',
+        'put:return:Event',
+        'post:Event',
+        'put:Event',
+        'putP:return:Event'
+    ])]
     private $name;
 
     /**
      * @ORM\ManyToOne(targetEntity=User::class, inversedBy="eventsCreated")
      * @ORM\JoinColumn(nullable=false)
      */
-    #[Groups(['getAll:Event', 'post:return:Event', 'getOne:Event', 'put:return:Event', 'post:Event', 'put:Event', 'putP:return:Event'])]
+    #[Groups([
+        'getAll:Event',
+        'post:return:Event',
+        'getOne:Event',
+        'put:return:Event',
+        'post:Event',
+        'put:Event',
+        'putP:return:Event'
+    ])]
     private $creator;
 
     /**
      * @ORM\ManyToMany(targetEntity=EventCategory::class, inversedBy="events")
      */
-    #[Groups(['getAll:Event', 'post:return:Event', 'getOne:Event', 'put:return:Event', 'post:Event', 'put:Event', 'putP:return:Event'])]
+    #[Groups([
+        'getAll:Event',
+        'post:return:Event',
+        'getOne:Event',
+        'put:return:Event',
+        'post:Event',
+        'put:Event',
+        'putP:return:Event'
+    ])]
     private $categories;
 
     /**
      * @ORM\ManyToMany(targetEntity=User::class, inversedBy="eventsParticipated")
      */
-    #[Groups(['getAll:Event', 'post:return:Event', 'getOne:Event', 'put:return:Event', 'post:Event', 'put:Event'])]
+    #[Groups([
+        'getAll:Event',
+        'post:return:Event',
+        'getOne:Event',
+        'put:return:Event',
+        'post:Event',
+        'put:Event',
+        'putP:Event',
+        'putP:return:Event'
+    ])]
     private $participants;
 
     public function __construct()
