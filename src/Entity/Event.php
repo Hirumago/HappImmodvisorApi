@@ -3,7 +3,6 @@
 namespace App\Entity;
 
 use ApiPlatform\Core\Annotation\ApiResource;
-use App\Controller\EventParticipant;
 use App\Controller\EventAddParticipant;
 use App\Controller\EventRemoveParticipant;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -35,15 +34,25 @@ use Doctrine\ORM\Mapping as ORM;
         'delete',
         'add_participant' => [
             'method' => 'PUT',
-            'path' => '/events/{eventId}/participant/{userId}',
+            'path' => '/events/{eventId}/participant/{userId}/add',
             'controller' => EventAddParticipant::class,
-            'read' => false
+            'read' => false,
+            'openapi_context' => [
+                'summary' => 'Add a participant to an event.',
+            ],
+            'normalization_context' => ['groups' => ['addPTE:return:Event']],
+            'denormalization_context' => ['groups' => ['addPTE:Event']]
         ],
         'remove_participant' => [
-            'method' => 'DELETE',
-            'path' => '/events/{eventId}/participant/{userId}',
+            'method' => 'PUT',
+            'path' => '/events/{eventId}/participant/{userId}/remove',
             'controller' => EventRemoveParticipant::class,
-            'read' => false
+            'read' => false,
+            'openapi_context' => [
+                'summary' => 'Remove a participant to an event.',
+            ],
+            'normalization_context' => ['groups' => ['removePTE:return:Event']],
+            'denormalization_context' => ['groups' => ['removePTE:Event']]
         ]
     ]
 )]
@@ -54,7 +63,15 @@ class Event
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
      */
-    #[Groups(['getAll:Event', 'post:return:Event', 'getOne:Event', 'put:return:Event', 'putP:return:Event'])]
+    #[Groups([
+        'getAll:Event',
+        'post:return:Event',
+        'getOne:Event',
+        'put:return:Event',
+        'putP:return:Event',
+        'addPTE:return:Event',
+        'removePTE:return:Event'
+    ])]
     private $id;
 
     /**
@@ -82,7 +99,9 @@ class Event
         'put:return:Event',
         'post:Event',
         'put:Event',
-        'putP:return:Event'
+        'putP:return:Event',
+        'addPTE:return:Event',
+        'removePTE:return:Event'
     ])]
     private $creator;
 
@@ -96,7 +115,9 @@ class Event
         'put:return:Event',
         'post:Event',
         'put:Event',
-        'putP:return:Event'
+        'putP:return:Event',
+        'addPTE:return:Event',
+        'removePTE:return:Event'
     ])]
     private $categories;
 
@@ -108,10 +129,11 @@ class Event
         'post:return:Event',
         'getOne:Event',
         'put:return:Event',
-        'post:Event',
         'put:Event',
         'putP:Event',
-        'putP:return:Event'
+        'putP:return:Event',
+        'addPTE:return:Event',
+        'removePTE:return:Event'
     ])]
     private $participants;
 
