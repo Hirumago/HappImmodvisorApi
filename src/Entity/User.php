@@ -3,13 +3,18 @@
 namespace App\Entity;
 
 use ApiPlatform\Core\Annotation\ApiResource;
+use App\Controller\UserAddAvatar;
+use App\Controller\UserRemoveAvatar;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\HttpFoundation\File\File;
+use Vich\UploaderBundle\Mapping\Annotation as Vich;
 
 /**
  * @ORM\Entity(repositoryClass=App\Repository\UserRepository::class)
+ * @Vich\Uploadable()
  */
 #[ApiResource(
     collectionOperations: [
@@ -29,7 +34,47 @@ use Doctrine\ORM\Mapping as ORM;
             'normalization_context' => ['groups' => ['put:return:User']],
             'denormalization_context' => ['groups' => ['put:User']]
         ],
-        'delete'
+        'delete',
+        'add_avatar' => [
+            'method' => 'POST',
+            'path' => '/users/{id}/avatar/add',
+            'deserialize' => false,
+            'controller' => UserAddAvatar::class,
+            'openapi_context' => [
+                'summary' => 'Add an avatar to an user.',
+                'requestBody' => [
+                    'content' => [
+                        'multipart/form-data' => [
+                            'schema' => [
+                                'type' => 'object',
+                                'properties' => [
+                                    'file' => [
+                                        'type' => 'string',
+                                        'format' => 'binary'
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            ],
+            'normalization_context' => ['groups' => ['addATU:return:User']],
+            'denormalization_context' => ['groups' => ['addATU:User']]
+        ],
+        'remove_avatar' => [
+            'method' => 'POST',
+            'path' => '/users/{id}/avatar/remove',
+            'deserialize' => false,
+            'controller' => UserRemoveAvatar::class,
+            'openapi_context' => [
+                'summary' => 'Remove an avatar to an user.',
+                'requestBody' => [
+                    'content' => []
+                ]
+            ],
+            'normalization_context' => ['groups' => ['addATU:return:User']],
+            'denormalization_context' => ['groups' => ['addATU:User']]
+        ],
     ]
 )]
 class User
@@ -39,25 +84,49 @@ class User
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
      */
-    #[Groups(['getAll:User', 'post:return:User', 'getOne:User', 'put:return:User'])]
+    #[Groups(['getAll:User', 'post:return:User', 'getOne:User', 'put:return:User', 'addATU:return:User'])]
     private $id;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    #[Groups(['getAll:User', 'post:return:User', 'getOne:User', 'put:return:User', 'post:User', 'put:User'])]
+    #[Groups(['getAll:User', 'post:return:User', 'getOne:User', 'put:return:User', 'post:User', 'put:User', 'addATU:return:User'])]
     private $nickname;
 
     /**
      * @ORM\OneToMany(targetEntity=Event::class, mappedBy="creator")
      */
-    #[Groups(['getAll:User', 'getOne:User', 'put:return:User'])]
+    #[Groups(['getAll:User', 'getOne:User', 'put:return:User', 'addATU:return:User'])]
     private $eventsCreated;
 
     /**
      * @ORM\ManyToMany(targetEntity=Event::class, mappedBy="participants")
      */
+    #[Groups(['getAll:User', 'getOne:User', 'addATU:return:User'])]
     private $eventsParticipated;
+
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $avatar;
+
+    /**
+     * @var File|null
+     * @Vich\UploadableField(mapping="user_avatar", fileNameProperty="avatar")
+     */
+    private $file;
+
+    /**
+     * @var string|null
+     */
+    #[Groups(['getAll:User', 'getOne:User', 'put:return:User', 'addATU:return:User'])]
+    private $avatarUrl;
+
+    /**
+     * @ORM\Column(type="datetime_immutable", nullable=true)
+     */
+    #[Groups(['getAll:User', 'getOne:User', 'put:return:User', 'addATU:return:User'])]
+    private $updatedAt;
 
     public function __construct()
     {
@@ -136,6 +205,66 @@ class User
             $eventsParticipated->removeParticipant($this);
         }
 
+        return $this;
+    }
+
+    public function getAvatar(): ?string
+    {
+        return $this->avatar;
+    }
+
+    public function setAvatar(?string $avatar): self
+    {
+        $this->avatar = $avatar;
+
+        return $this;
+    }
+
+    /**
+     * @return File|null
+     */
+    public function getFile(): ?File
+    {
+        return $this->file;
+    }
+
+    /**
+     * @param File|null $file
+     * @return User
+     */
+    public function setFile(?File $file): User
+    {
+        $this->file = $file;
+        return $this;
+    }
+
+    public function getUpdatedAt(): ?\DateTimeImmutable
+    {
+        return $this->updatedAt;
+    }
+
+    public function setUpdatedAt(?\DateTimeImmutable $updatedAt): self
+    {
+        $this->updatedAt = $updatedAt;
+
+        return $this;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getAvatarUrl(): ?string
+    {
+        return $this->avatarUrl;
+    }
+
+    /**
+     * @param string|null $avatarUrl
+     * @return User
+     */
+    public function setAvatarUrl(?string $avatarUrl): User
+    {
+        $this->avatarUrl = $avatarUrl;
         return $this;
     }
 }

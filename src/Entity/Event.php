@@ -33,23 +33,24 @@ use Doctrine\ORM\Mapping as ORM;
         ],
         'delete',
         'add_participant' => [
-            'method' => 'PUT',
-            'path' => '/events/{eventId}/participant/{userId}/add',
+            'method' => 'POST',
+            'path' => '/events/{id}/participant/{userId}/add',
             'controller' => EventAddParticipant::class,
-            'read' => false,
             'openapi_context' => [
-                'summary' => 'Add a participant to an event.',
+                'summary' => 'Add a participant to an event.'
             ],
             'normalization_context' => ['groups' => ['addPTE:return:Event']],
             'denormalization_context' => ['groups' => ['addPTE:Event']]
         ],
         'remove_participant' => [
-            'method' => 'PUT',
-            'path' => '/events/{eventId}/participant/{userId}/remove',
+            'method' => 'POST',
+            'path' => '/events/{id}/participant/{userId}/remove',
             'controller' => EventRemoveParticipant::class,
-            'read' => false,
             'openapi_context' => [
                 'summary' => 'Remove a participant to an event.',
+                'requestBody' => [
+                    'content' => []
+                ]
             ],
             'normalization_context' => ['groups' => ['removePTE:return:Event']],
             'denormalization_context' => ['groups' => ['removePTE:Event']]
@@ -126,6 +127,7 @@ class Event
      */
     #[Groups([
         'getAll:Event',
+        'post:Event',
         'post:return:Event',
         'getOne:Event',
         'put:return:Event',
