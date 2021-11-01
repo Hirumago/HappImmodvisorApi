@@ -150,6 +150,12 @@ class User
     private $avatarUrl;
 
     /**
+     * @ORM\Column(type="datetime_immutable")
+     */
+    #[Groups(['getAll:User', 'getOne:User', 'put:return:User', 'addATU:return:User'])]
+    private $createdAt;
+
+    /**
      * @ORM\Column(type="datetime_immutable", nullable=true)
      */
     #[Groups(['getAll:User', 'getOne:User', 'put:return:User', 'addATU:return:User'])]
