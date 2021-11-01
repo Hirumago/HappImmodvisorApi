@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use ApiPlatform\Core\Annotation\ApiResource;
 use App\Controller\UserAddAvatar;
+use App\Controller\UserNew;
 use App\Controller\UserRemoveAvatar;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -22,8 +23,33 @@ use Vich\UploaderBundle\Mapping\Annotation as Vich;
             'normalization_context' => ['groups' => ['getAll:User']],
         ],
         'post' => [
+            'method' => 'POST',
+            'path' => '/users',
+            'deserialize' => false,
+            'controller' => UserNew::class,
+            'openapi_context' => [
+                'summary' => 'Add an avatar to an user.',
+                'requestBody' => [
+                    'content' => [
+                        'multipart/form-data' => [
+                            'schema' => [
+                                'type' => 'object',
+                                'properties' => [
+                                    'nickname' => [
+                                        'type' => 'string',
+                                    ],
+                                    'file' => [
+                                        'type' => 'string',
+                                        'format' => 'binary'
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            ],
             'normalization_context' => ['groups' => ['post:return:User']],
-            'denormalization_context' => ['groups' => ['post:User']]
+            'denormalization_context' => ['groups' => ['post:User']],
         ],
     ],
     itemOperations: [
@@ -114,13 +140,20 @@ class User
      * @var File|null
      * @Vich\UploadableField(mapping="user_avatar", fileNameProperty="avatar")
      */
+    #[Groups(['post:User'])]
     private $file;
 
     /**
      * @var string|null
      */
-    #[Groups(['getAll:User', 'getOne:User', 'put:return:User', 'addATU:return:User'])]
+    #[Groups(['getAll:User', 'post:return:User', 'getOne:User', 'put:return:User', 'addATU:return:User'])]
     private $avatarUrl;
+
+    /**
+     * @ORM\Column(type="datetime_immutable")
+     */
+    #[Groups(['getAll:User', 'getOne:User', 'put:return:User', 'addATU:return:User'])]
+    private $createdAt;
 
     /**
      * @ORM\Column(type="datetime_immutable", nullable=true)
@@ -235,6 +268,18 @@ class User
     public function setFile(?File $file): User
     {
         $this->file = $file;
+        return $this;
+    }
+
+    public function getCreatedAt(): ?\DateTimeImmutable
+    {
+        return $this->createdAt;
+    }
+
+    public function setCreatedAt(\DateTimeImmutable $createdAt): self
+    {
+        $this->createdAt = $createdAt;
+
         return $this;
     }
 
