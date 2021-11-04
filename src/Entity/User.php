@@ -8,6 +8,7 @@ use App\Controller\UserNew;
 use App\Controller\UserRemoveAvatar;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use phpDocumentor\Reflection\Types\Object_;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\HttpFoundation\File\File;
@@ -31,17 +32,16 @@ use Vich\UploaderBundle\Mapping\Annotation as Vich;
                 'summary' => 'Add an avatar to an user.',
                 'requestBody' => [
                     'content' => [
-                        'multipart/form-data' => [
+                        'application/ld+json' => [
                             'schema' => [
                                 'type' => 'object',
                                 'properties' => [
                                     'nickname' => [
-                                        'type' => 'string',
+                                        'type' => 'string'
                                     ],
                                     'file' => [
-                                        'type' => 'string',
-                                        'format' => 'binary'
-                                    ]
+                                        'type' => 'string'
+                                    ],
                                 ]
                             ]
                         ]
@@ -134,26 +134,21 @@ class User
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
      */
+    #[Groups(['getAll:User', 'post:return:User', 'getOne:User', 'put:return:User', 'addATU:return:User'])]
     private $avatar;
 
-    /**
-     * @var File|null
-     * @Vich\UploadableField(mapping="user_avatar", fileNameProperty="avatar")
-     */
-    #[Groups(['post:User'])]
-    private $file;
-
-    /**
-     * @var string|null
-     */
-    #[Groups(['getAll:User', 'post:return:User', 'getOne:User', 'put:return:User', 'addATU:return:User'])]
-    private $avatarUrl;
-
-    /**
-     * @ORM\Column(type="datetime_immutable")
-     */
-    #[Groups(['getAll:User', 'getOne:User', 'put:return:User', 'addATU:return:User'])]
-    private $createdAt;
+//    /**
+//     * @var File|null
+//     * @Vich\UploadableField(mapping="user_avatar", fileNameProperty="avatar")
+//     */
+//    #[Groups(['post:User'])]
+//    private $file;
+//
+//    /**
+//     * @var string|null
+//     */
+//    #[Groups(['getAll:User', 'post:return:User', 'getOne:User', 'put:return:User', 'addATU:return:User'])]
+//    private $avatarUrl;
 
     /**
      * @ORM\Column(type="datetime_immutable", nullable=true)
@@ -259,23 +254,23 @@ class User
         return $this;
     }
 
-    /**
-     * @return File|null
-     */
-    public function getFile(): ?File
-    {
-        return $this->file;
-    }
-
-    /**
-     * @param File|null $file
-     * @return User
-     */
-    public function setFile(?File $file): User
-    {
-        $this->file = $file;
-        return $this;
-    }
+//    /**
+//     * @return File|null
+//     */
+//    public function getFile(): ?File
+//    {
+//        return $this->file;
+//    }
+//
+//    /**
+//     * @param File|null $file
+//     * @return User
+//     */
+//    public function setFile(?File $file): User
+//    {
+//        $this->file = $file;
+//        return $this;
+//    }
 
     public function getCreatedAt(): ?\DateTimeImmutable
     {
@@ -298,24 +293,6 @@ class User
     {
         $this->updatedAt = $updatedAt;
 
-        return $this;
-    }
-
-    /**
-     * @return string|null
-     */
-    public function getAvatarUrl(): ?string
-    {
-        return $this->avatarUrl;
-    }
-
-    /**
-     * @param string|null $avatarUrl
-     * @return User
-     */
-    public function setAvatarUrl(?string $avatarUrl): User
-    {
-        $this->avatarUrl = $avatarUrl;
         return $this;
     }
 }

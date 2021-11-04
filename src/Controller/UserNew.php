@@ -17,12 +17,32 @@ class UserNew extends AbstractController
         $nickname = $request->get('nickname');
         $user->setNickname($nickname);
 
-        $uploadedFile = $request->files->get('file');
-        if ($uploadedFile) {
-            $user->setFile($uploadedFile);
+        $uploadedFile = json_decode($request->get('file'));
+
+        if ($uploadedFile->uri) {
+            $file = $uploadedFile->uri;
+            $file = str_replace('data:image/jpeg;base64,', '', $file);
+            $file = str_replace(' ', '+', $file);
+
+            $type = $uploadedFile->type;
+
+            $fileToUpload = uniqid('av-', true) . '.' . $type;
+
+            $folder =  __DIR__ . '/../../' . $_ENV['IMAGES_FOLDER'];
+
+            if (!file_exists($folder) || !is_dir($folder) || !is_writable($folder)) {
+                throw new \RuntimeException('Impossible de sauvegarder l\'image.');
+            }
+
+            $fileUploaded = file_put_contents($folder . $fileToUpload, $file);
+
+            if (!$fileUploaded) {
+                throw new \RuntimeException('Image non sauvegardée.');
+            }
+
+            $user->setAvatar($fileToUpload);
         }
 
-        $user->setFile($uploadedFile);
         $user->setCreatedAt(new \DateTimeImmutable());
 
         return $user;

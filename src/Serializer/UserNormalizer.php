@@ -32,8 +32,6 @@ class UserNormalizer implements ContextAwareNormalizerInterface, NormalizerAware
      */
     public function normalize($object, string $format = null, array $context = [])
     {
-        $object->setAvatarUrl($this->storage->resolveUri($object, 'file'));
-
         $context[self::ALREADY_CALLED] = true;
 
         return $this->normalizer->normalize($object, $format, $context);
