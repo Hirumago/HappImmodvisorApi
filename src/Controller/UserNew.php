@@ -19,14 +19,12 @@ class UserNew extends AbstractController
 
         $uploadedFile = json_decode($request->get('file'));
 
-        if ($uploadedFile->uri) {
-            $file = $uploadedFile->uri;
-            $file = str_replace('data:image/jpeg;base64,', '', $file);
-            $file = str_replace(' ', '+', $file);
+        if ($uploadedFile->base64) {
+            $file = $uploadedFile->base64;
 
-            $type = $uploadedFile->type;
+            $extension = $uploadedFile->extension;
 
-            $fileToUpload = uniqid('av-', true) . '.' . $type;
+            $fileToUpload = uniqid('av-', true) . '.' . $extension;
 
             $folder =  __DIR__ . '/../../' . $_ENV['IMAGES_FOLDER'];
 
@@ -34,7 +32,7 @@ class UserNew extends AbstractController
                 throw new \RuntimeException('Impossible de sauvegarder l\'image.');
             }
 
-            $fileUploaded = file_put_contents($folder . $fileToUpload, $file);
+            $fileUploaded = file_put_contents($folder . $fileToUpload, base64_decode($file));
 
             if (!$fileUploaded) {
                 throw new \RuntimeException('Image non sauvegardée.');
