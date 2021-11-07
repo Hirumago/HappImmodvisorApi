@@ -4,14 +4,13 @@ namespace App\Entity;
 
 use ApiPlatform\Core\Annotation\ApiResource;
 use App\Controller\UserAddAvatar;
-use App\Controller\UserNew;
 use App\Controller\UserRemoveAvatar;
-use Doctrine\Common\Collections\ArrayCollection;
+use App\Repository\UserRepository;
 use Doctrine\Common\Collections\Collection;
-use phpDocumentor\Reflection\Types\Object_;
-use Symfony\Component\Serializer\Annotation\Groups;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\HttpFoundation\File\File;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Serializer\Annotation\Groups;
 use Vich\UploaderBundle\Mapping\Annotation as Vich;
 
 /**
@@ -25,17 +24,23 @@ use Vich\UploaderBundle\Mapping\Annotation as Vich;
         ],
         'post' => [
             'method' => 'POST',
-            'path' => '/users',
+            'path' => '/register',
             'deserialize' => false,
-            'controller' => UserNew::class,
+            'controller' => \App\Controller\RegisterController::class,
             'openapi_context' => [
-                'summary' => 'Add an avatar to an user.',
+                'summary' => 'Create an user.',
                 'requestBody' => [
                     'content' => [
-                        'application/ld+json' => [
+                        'multipart/form-data' => [
                             'schema' => [
                                 'type' => 'object',
                                 'properties' => [
+                                    'email' => [
+                                        'type' => 'string'
+                                    ],
+                                    'password' => [
+                                        'type' => 'string'
+                                    ],
                                     'nickname' => [
                                         'type' => 'string'
                                     ],
@@ -103,7 +108,7 @@ use Vich\UploaderBundle\Mapping\Annotation as Vich;
         ],
     ]
 )]
-class User
+class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     /**
      * @ORM\Id
@@ -112,6 +117,24 @@ class User
      */
     #[Groups(['getAll:User', 'post:return:User', 'getOne:User', 'put:return:User', 'addATU:return:User'])]
     private $id;
+
+    /**
+     * @ORM\Column(type="string", length=180, unique=true)
+     */
+    #[Groups(['getAll:User', 'post:return:User', 'getOne:User', 'put:return:User', 'addATU:return:User'])]
+    private $email;
+
+    /**
+     * @ORM\Column(type="json")
+     */
+    #[Groups(['getAll:User', 'post:return:User', 'getOne:User', 'put:return:User', 'addATU:return:User'])]
+    private $roles = [];
+
+    /**
+     * @var string The hashed password
+     * @ORM\Column(type="string")
+     */
+    private $password;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
@@ -136,20 +159,6 @@ class User
      */
     #[Groups(['getAll:User', 'post:return:User', 'getOne:User', 'put:return:User', 'addATU:return:User'])]
     private $avatar;
-
-//    /**
-//     * @var File|null
-//     * @Vich\UploadableField(mapping="user_avatar", fileNameProperty="avatar")
-//     */
-//    #[Groups(['post:User'])]
-//    private $file;
-//
-//    /**
-//     * @var string|null
-//     */
-//    #[Groups(['getAll:User', 'post:return:User', 'getOne:User', 'put:return:User', 'addATU:return:User'])]
-//    private $avatarUrl;
-
     /**
      * @ORM\Column(type="datetime_immutable", nullable=true)
      */
@@ -162,15 +171,93 @@ class User
     #[Groups(['getAll:User', 'getOne:User', 'put:return:User', 'addATU:return:User'])]
     private $updatedAt;
 
-    public function __construct()
-    {
-        $this->eventsCreated = new ArrayCollection();
-        $this->eventsParticipated = new ArrayCollection();
-    }
-
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    public function getEmail(): ?string
+    {
+        return $this->email;
+    }
+
+    public function setEmail(string $email): self
+    {
+        $this->email = $email;
+
+        return $this;
+    }
+
+    /**
+     * A visual identifier that represents this user.
+     *
+     * @see UserInterface
+     */
+    public function getUserIdentifier(): string
+    {
+        return (string) $this->email;
+    }
+
+    /**
+     * @deprecated since Symfony 5.3, use getUserIdentifier instead
+     */
+    public function getUsername(): string
+    {
+        return (string) $this->email;
+    }
+
+    /**
+     * @see UserInterface
+     */
+    public function getRoles(): array
+    {
+        $roles = $this->roles;
+        // guarantee every user at least has ROLE_USER
+        $roles[] = 'ROLE_USER';
+
+        return array_unique($roles);
+    }
+
+    public function setRoles(array $roles): self
+    {
+        $this->roles = $roles;
+
+        return $this;
+    }
+
+    /**
+     * @see PasswordAuthenticatedUserInterface
+     */
+    public function getPassword(): string
+    {
+        return $this->password;
+    }
+
+    public function setPassword(string $password): self
+    {
+        $this->password = $password;
+
+        return $this;
+    }
+
+    /**
+     * Returning a salt is only needed, if you are not using a modern
+     * hashing algorithm (e.g. bcrypt or sodium) in your security.yaml.
+     *
+     * @see UserInterface
+     */
+    public function getSalt(): ?string
+    {
+        return null;
+    }
+
+    /**
+     * @see UserInterface
+     */
+    public function eraseCredentials()
+    {
+        // If you store any temporary, sensitive data on the user, clear it here
+        // $this->plainPassword = null;
     }
 
     public function getNickname(): ?string
@@ -253,24 +340,6 @@ class User
 
         return $this;
     }
-
-//    /**
-//     * @return File|null
-//     */
-//    public function getFile(): ?File
-//    {
-//        return $this->file;
-//    }
-//
-//    /**
-//     * @param File|null $file
-//     * @return User
-//     */
-//    public function setFile(?File $file): User
-//    {
-//        $this->file = $file;
-//        return $this;
-//    }
 
     public function getCreatedAt(): ?\DateTimeImmutable
     {
