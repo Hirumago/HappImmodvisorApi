@@ -28,7 +28,7 @@ class LoginController extends AbstractController
         $plaintextPassword = $request->get('password');
 
         if (!$passwordHasher->isPasswordValid($user, $plaintextPassword)) {
-            throw new \RuntimeException('Identifiants incorrect');
+            throw new \RuntimeException('Identifiants incorrects.');
         }
 
         $token = new UsernamePasswordToken($user, null, 'main', $user->getRoles());

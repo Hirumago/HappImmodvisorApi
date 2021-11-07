@@ -161,7 +161,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
      */
-    #[Groups(['getAll:User', 'post:return:User', 'getOne:User', 'put:return:User', 'addATU:return:User'])]
+    #[Groups(['getAll:User', 'post:return:User', 'getOne:User', 'put:return:User', 'addATU:return:User', 'post:return:Login'])]
     private $id;
 
     /**
@@ -185,7 +185,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    #[Groups(['getAll:User', 'post:return:User', 'getOne:User', 'put:return:User', 'post:User', 'put:User', 'addATU:return:User'])]
+    #[Groups(['getAll:User', 'post:return:User', 'getOne:User', 'put:return:User', 'post:User', 'put:User', 'addATU:return:User', 'post:return:Login'])]
     private $nickname;
 
     /**
@@ -197,13 +197,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     /**
      * @ORM\ManyToMany(targetEntity=Event::class, mappedBy="participants")
      */
-    #[Groups(['getAll:User', 'getOne:User', 'addATU:return:User'])]
+    #[Groups(['getAll:User', 'getOne:User', 'addATU:return:User', 'post:return:Login'])]
     private $eventsParticipated;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    #[Groups(['getAll:User', 'post:return:User', 'getOne:User', 'put:return:User', 'addATU:return:User'])]
+    #[Groups(['getAll:User', 'post:return:User', 'getOne:User', 'put:return:User', 'addATU:return:User', 'post:return:Login'])]
     private $avatar;
     /**
      * @ORM\Column(type="datetime_immutable", nullable=true)
