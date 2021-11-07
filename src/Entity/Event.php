@@ -23,6 +23,7 @@ use Doctrine\ORM\Mapping as ORM;
             'denormalization_context' => ['groups' => ['post:Event']]
         ],
     ],
+
     itemOperations: [
         'get' => [
             'normalization_context' => ['groups' => ['getOne:Event']],
@@ -55,7 +56,8 @@ use Doctrine\ORM\Mapping as ORM;
             'normalization_context' => ['groups' => ['removePTE:return:Event']],
             'denormalization_context' => ['groups' => ['removePTE:Event']]
         ]
-    ]
+    ],
+    attributes: ["security" => "is_granted('ROLE_USER')"]
 )]
 class Event
 {

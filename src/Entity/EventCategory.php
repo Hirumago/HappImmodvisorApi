@@ -31,7 +31,8 @@ use Symfony\Component\Serializer\Annotation\Groups;
             'denormalization_context' => ['groups' => ['put:EC']]
         ],
         'delete'
-    ]
+    ],
+    attributes: ["security" => "is_granted('ROLE_USER')"]
 )]
 class EventCategory
 {

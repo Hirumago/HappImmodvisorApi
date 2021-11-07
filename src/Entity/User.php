@@ -21,6 +21,7 @@ use Vich\UploaderBundle\Mapping\Annotation as Vich;
     collectionOperations: [
         'get' => [
             'normalization_context' => ['groups' => ['getAll:User']],
+            'security' => 'is_granted("ROLE_USER")'
         ],
         'post' => [
             'method' => 'POST',
@@ -56,14 +57,57 @@ use Vich\UploaderBundle\Mapping\Annotation as Vich;
             'normalization_context' => ['groups' => ['post:return:User']],
             'denormalization_context' => ['groups' => ['post:User']],
         ],
+        'login' => [
+            'method' => 'POST',
+            'path' => '/login',
+            'deserialize' => false,
+            'controller' => \App\Controller\LoginController::class,
+            'openapi_context' => [
+                'summary' => 'Log into the API',
+                'requestBody' => [
+                    'content' => [
+                        'multipart/form-data' => [
+                            'schema' => [
+                                'type' => 'object',
+                                'properties' => [
+                                    'email' => [
+                                        'type' => 'string'
+                                    ],
+                                    'password' => [
+                                        'type' => 'string'
+                                    ],
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            ],
+            'normalization_context' => ['groups' => ['post:return:Login']],
+            'denormalization_context' => ['groups' => ['post:Login']],
+        ],
+        'logout' => [
+            'method' => 'POST',
+            'path' => '/logout',
+            'deserialize' => false,
+            'controller' => \App\Controller\LogoutController::class,
+            'openapi_context' => [
+                'summary' => 'Logout from API.',
+            ],
+            'normalization_context' => ['groups' => ['post:return:Login']],
+            'denormalization_context' => ['groups' => ['post:Login']],
+            'security' => 'is_granted("ROLE_USER")'
+        ],
     ],
     itemOperations: [
         'get' => [
             'normalization_context' => ['groups' => ['getOne:User']],
+            'security' => 'is_granted("ROLE_USER")'
         ],
         'put' => [
             'normalization_context' => ['groups' => ['put:return:User']],
-            'denormalization_context' => ['groups' => ['put:User']]
+            'denormalization_context' => ['groups' => ['put:User']],
+            'security' => 'is_granted("ROLE_USER")'
+
         ],
         'delete',
         'add_avatar' => [
@@ -90,7 +134,8 @@ use Vich\UploaderBundle\Mapping\Annotation as Vich;
                 ]
             ],
             'normalization_context' => ['groups' => ['addATU:return:User']],
-            'denormalization_context' => ['groups' => ['addATU:User']]
+            'denormalization_context' => ['groups' => ['addATU:User']],
+            'security' => 'is_granted("ROLE_USER")'
         ],
         'remove_avatar' => [
             'method' => 'POST',
@@ -104,9 +149,10 @@ use Vich\UploaderBundle\Mapping\Annotation as Vich;
                 ]
             ],
             'normalization_context' => ['groups' => ['addATU:return:User']],
-            'denormalization_context' => ['groups' => ['addATU:User']]
+            'denormalization_context' => ['groups' => ['addATU:User']],
+            'security' => 'is_granted("ROLE_USER")'
         ],
-    ]
+    ],
 )]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
@@ -121,7 +167,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     /**
      * @ORM\Column(type="string", length=180, unique=true)
      */
-    #[Groups(['getAll:User', 'post:return:User', 'getOne:User', 'put:return:User', 'addATU:return:User'])]
+    #[Groups(['getAll:User', 'post:return:User', 'getOne:User', 'put:return:User', 'addATU:return:User', 'post:Login', 'post:return:Login'])]
     private $email;
 
     /**
